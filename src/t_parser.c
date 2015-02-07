@@ -495,6 +495,24 @@ static void test_endianness(gconstpointer backend) {
   g_check_parse_match(lb_u5_,  be, "abcd", 4, "u0xc");
 }
 
+static void test_aligned(gconstpointer backend) {
+  HParserBackend be = (HParserBackend)GPOINTER_TO_INT(backend);
+
+  HParser *al8 = h_aligned(8);
+  HParser *al3 = h_aligned(3);
+  HParser *byte = h_bits(8, false);
+  HParser *bit = h_bits(1, false);
+
+  g_check_parse_match(al8, be, "abcd", 4, "NULL");
+  g_check_parse_match(al3, be, "abcd", 4, "NULL");
+  g_check_parse_match(h_sequence(byte,byte,al8,NULL), be, "abcd", 4, "(u0x61 u0x62)");
+  g_check_parse_match(h_sequence(byte,bit,al3,NULL), be, "a\x0F", 2, "(u0x61 u0)");
+  g_check_parse_match(h_with_endianness(BIT_LITTLE_ENDIAN,
+                      h_sequence(byte,bit,al3,NULL)), be, "a\x0F", 2, "(u0x61 u0x1)");
+  g_check_parse_failed(h_sequence(byte,bit,al8,NULL), be, "abcd", 4);
+  g_check_parse_failed(h_sequence(byte,byte,al3,NULL), be, "abcd", 4);
+}
+
 HParsedToken* act_get(const HParseResult *p, void* user_data) {
   HParsedToken *ret = a_new_(p->arena, HParsedToken, 1);
   ret->token_type = TT_UINT;
@@ -650,6 +668,7 @@ void register_parser_tests(void) {
   g_test_add_data_func("/core/parser/packrat/leftrec-ne", GINT_TO_POINTER(PB_PACKRAT), test_leftrec_ne);
   g_test_add_data_func("/core/parser/packrat/rightrec", GINT_TO_POINTER(PB_PACKRAT), test_rightrec);
   g_test_add_data_func("/core/parser/packrat/endianness", GINT_TO_POINTER(PB_PACKRAT), test_endianness);
+  g_test_add_data_func("/core/parser/packrat/aligned", GINT_TO_POINTER(PB_PACKRAT), test_aligned);
   g_test_add_data_func("/core/parser/packrat/putget", GINT_TO_POINTER(PB_PACKRAT), test_put_get);
   g_test_add_data_func("/core/parser/packrat/permutation", GINT_TO_POINTER(PB_PACKRAT), test_permutation);
   g_test_add_data_func("/core/parser/packrat/bind", GINT_TO_POINTER(PB_PACKRAT), test_bind);
