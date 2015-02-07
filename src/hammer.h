@@ -641,6 +641,14 @@ HAMMER_FN_DECL(void, h_bind_indirect, HParser* indirect, const HParser* inner);
 HAMMER_FN_DECL(HParser*, h_with_endianness, char endianness, const HParser* p);
 
 /**
+ * This parser succeeds if and only if the input stream is positioned at a
+ * multiple of n bits.
+ *
+ * Result token type: NULL.
+ */
+HAMMER_FN_DECL(HParser*, h_aligned, size_t n);
+
+/**
  * The 'h_put_value' combinator stashes the result of the parser
  * it wraps in a symbol table in the parse state, so that non-
  * local actions and predicates can access this value. 

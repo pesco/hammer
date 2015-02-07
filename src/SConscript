@@ -20,6 +20,7 @@ backends_headers = [
 
 parsers = ['parsers/%s.c'%s for s in
            ['action',
+            'aligned',
             'and',
             'attr_bool',
             'bits',
