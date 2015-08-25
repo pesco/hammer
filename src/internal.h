@@ -24,16 +24,21 @@
 #define HAMMER_INTERNAL__H
 #include <stdint.h>
 #include <assert.h>
-#include <err.h>
 #include <string.h>
 #include "hammer.h"
+#include "platform.h"
+
+/* "Internal" in this case means "we're not ready to commit
+ * to a public API." Many structures and routines here will be
+ * useful in client programs.
+ */
 
 #ifdef NDEBUG
 #define assert_message(check, message) do { } while(0)
 #else
 #define assert_message(check, message) do {				\
     if (!(check))							\
-      errx(1, "Assertion failed (programmer error): %s", message);	\
+      h_platform_errx(1, "Assertion failed (programmer error): %s", message);	\
   } while(0)
 #endif
 
@@ -282,6 +287,7 @@ struct HBitWriter_ {
 		   // of used bits in the current byte. i.e., 0 always
 		   // means that 8 bits are available for use.
   char flags;
+  char error;
 };
 
 // }}}

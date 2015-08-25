@@ -17,6 +17,9 @@
 
 #ifndef HAMMER_HAMMER__H
 #define HAMMER_HAMMER__H
+
+#include "compiler_specifics.h"
+
 #ifndef HAMMER_INTERNAL__NO_STDARG_H
 #include <stdarg.h>
 #endif // HAMMER_INTERNAL__NO_STDARG_H
@@ -48,6 +51,7 @@ typedef enum HParserBackend_ {
 
 typedef enum HTokenType_ {
   // Before you change the explicit values of these, think of the poor bindings ;_;
+  TT_INVALID = 0,
   TT_NONE = 1,
   TT_BYTES = 2,
   TT_SINT = 4,
@@ -268,6 +272,8 @@ HAMMER_FN_DECL(HParseResult*, h_parse, const HParser* parser, const uint8_t* inp
  */
 HAMMER_FN_DECL(HParser*, h_token, const uint8_t *str, const size_t len);
 
+#define h_literal(s) h_token(s, sizeof(s)-1)
+
 /**
  * Given a single character, returns a parser that parses that 
  * character. 
@@ -431,7 +437,7 @@ HAMMER_FN_DECL_NOARG(HParser*, h_nothing_p);
  *
  * Result token type: TT_SEQUENCE
  */
-HAMMER_FN_DECL_VARARGS_ATTR(__attribute__((sentinel)), HParser*, h_sequence, HParser* p);
+HAMMER_FN_DECL_VARARGS_ATTR(H_GCC_ATTRIBUTE((sentinel)), HParser*, h_sequence, HParser* p);
 
 /**
  * Given an array of parsers, p_array, apply each parser in order. The 
@@ -440,7 +446,7 @@ HAMMER_FN_DECL_VARARGS_ATTR(__attribute__((sentinel)), HParser*, h_sequence, HPa
  *
  * Result token type: The type of the first successful parser's result.
  */
-HAMMER_FN_DECL_VARARGS_ATTR(__attribute__((sentinel)), HParser*, h_choice, HParser* p);
+HAMMER_FN_DECL_VARARGS_ATTR(H_GCC_ATTRIBUTE((sentinel)), HParser*, h_choice, HParser* p);
 
 /**
  * Given a null-terminated list of parsers, match a permutation phrase of these
@@ -466,7 +472,7 @@ HAMMER_FN_DECL_VARARGS_ATTR(__attribute__((sentinel)), HParser*, h_choice, HPars
  *
  * Result token type: TT_SEQUENCE
  */
-HAMMER_FN_DECL_VARARGS_ATTR(__attribute__((sentinel)), HParser*, h_permutation, HParser* p);
+HAMMER_FN_DECL_VARARGS_ATTR(H_GCC_ATTRIBUTE((sentinel)), HParser*, h_permutation, HParser* p);
 
 /**
  * Given two parsers, p1 and p2, this parser succeeds in the following 
