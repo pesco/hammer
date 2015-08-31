@@ -24,8 +24,10 @@ static HParseResult* parse_ignoreseq(void* env, HParseState *state) {
     HParseResult *tmp = h_do_parse(seq->parsers[i], state);
     if (!tmp)
       return NULL;
-    else if (i == seq->which)
+    else if (i == seq->which) {
       res = tmp;
+      res->bit_length = 0;  // recalculate
+    }
   }
 
   return res;

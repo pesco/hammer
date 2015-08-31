@@ -49,10 +49,12 @@ static HParseResult *parse_bind(void *be_, HParseState *state) {
         return NULL;
     }
 
-    res = h_do_parse(kx, state);
+    HParseResult *res2 = h_do_parse(kx, state);
+    if(res2)
+        res2->bit_length = 0;   // recalculate
 
     h_delete_arena(arena);
-    return res;
+    return res2;
 }
 
 static const HParserVtable bind_vt = {

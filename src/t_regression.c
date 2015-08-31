@@ -118,9 +118,30 @@ static void test_llk_zero_end(void) {
     g_check_parse_failed(aze, be, "a", 1);
 }
 
+HParser *k_test_wrong_bit_length(HAllocator *mm__, const HParsedToken *tok, void *env)
+{
+    return h_ch__m(mm__, 'b');
+}
+
+static void test_wrong_bit_length(void) {
+    HParseResult *r;
+    HParser *p;
+
+    p = h_right(h_ch('a'), h_ch('b'));
+    r = h_parse(p, (const uint8_t *)"ab", 2);
+    g_check_cmp_int64(r->bit_length, ==, 16);
+    h_parse_result_free(r);
+
+    p = h_bind(h_ch('a'), k_test_wrong_bit_length, NULL);
+    r = h_parse(p, (const uint8_t *)"ab", 2);
+    g_check_cmp_int64(r->bit_length, ==, 16);
+    h_parse_result_free(r);
+}
+
 void register_regression_tests(void) {
   g_test_add_func("/core/regression/bug118", test_bug118);
   g_test_add_func("/core/regression/seq_index_path", test_seq_index_path);
   g_test_add_func("/core/regression/read_bits_48", test_read_bits_48);
   g_test_add_func("/core/regression/llk_zero_end", test_llk_zero_end);
+  g_test_add_func("/core/regression/wrong_bit_length", test_wrong_bit_length);
 }
