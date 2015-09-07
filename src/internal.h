@@ -78,7 +78,8 @@ typedef struct HInputStream_ {
   char margin; // The number of bits on the end that is being read
 	       // towards that should be ignored.
   char endianness;
-  char overrun;
+  bool overrun;
+  bool last_chunk;
 } HInputStream;
 
 typedef struct HSlistNode_ {
@@ -210,10 +211,28 @@ struct HParseState_ {
   HSlist *symbol_table; // its contents are HHashTables
 };
 
+struct HSuspendedParser_ {
+  HAllocator *mm__;
+  const HParser *parser;
+  void *backend_state;
+
+  // the only part of HInputStream that carries across chunks
+  uint8_t endianness;
+};
+
 typedef struct HParserBackendVTable_ {
   int (*compile)(HAllocator *mm__, HParser* parser, const void* params);
   HParseResult* (*parse)(HAllocator *mm__, const HParser* parser, HInputStream* stream);
   void (*free)(HParser* parser);
+
+  void (*parse_start)(HSuspendedParser *s);
+    // parse_start should allocate s->backend_state.
+  void (*parse_chunk)(HSuspendedParser *s, HInputStream *input);
+    // when parse_chunk leaves input.overrun unset, parse is done. else:
+    // parse_chunk MUST consume all input, integrating it into s->backend_state.
+    // calling parse_chunk again after parse is done should have no effect.
+  HParseResult *(*parse_finish)(HSuspendedParser *s);
+    // parse_finish must free s->backend_state.
 } HParserBackendVTable;
 
 
