@@ -10,7 +10,10 @@ typedef struct {
 
 static HParseResult *parse_many(void* env, HParseState *state) {
   HRepeat *env_ = (HRepeat*) env;
-  HCountedArray *seq = h_carray_new_sized(state->arena, (env_->count > 0 ? env_->count : 4));
+  size_t size = env_->count;
+  if(size <= 0) size = 4;
+  if(size > 1024) size = 1024;  // let's try parsing some elements first...
+  HCountedArray *seq = h_carray_new_sized(state->arena, size);
   size_t count = 0;
   HInputStream bak;
   while (env_->min_p || env_->count > count) {

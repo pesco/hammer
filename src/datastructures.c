@@ -25,11 +25,12 @@ HCountedArray *h_carray_new(HArena * arena) {
 
 void h_carray_append(HCountedArray *array, void* item) {
   if (array->used >= array->capacity) {
-    HParsedToken **elements = h_arena_malloc(array->arena, (array->capacity *= 2) * sizeof(HCountedArray*));
+    HParsedToken **elements = h_arena_malloc(array->arena, (array->capacity *= 2) * sizeof(void*));
     for (size_t i = 0; i < array->used; i++)
       elements[i] = array->elements[i];
     for (size_t i = array->used; i < array->capacity; i++)
       elements[i] = 0;
+    h_arena_free(array->arena, array->elements);
     array->elements = elements;
   }
   array->elements[array->used++] = item;
