@@ -20,6 +20,7 @@ static const HParserVtable aligned_vt = {
     .isValidRegular = h_false,
     .isValidCF = h_false,
     .compile_to_rvm = h_not_regular,
+    .higher = true,
 };
 
 HParser *h_aligned(size_t n)
