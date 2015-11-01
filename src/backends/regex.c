@@ -56,7 +56,16 @@ void* h_rvm_run__m(HAllocator *mm__, HRVMProg *prog, const uint8_t* input, size_
     *heads_p = h_sarray_new(mm__, prog->length);
 
   HRVMTrace *ret_trace = NULL;
+  HParseResult *ret = NULL;
   
+  // out of memory handling
+  if(!arena || !heads_n || !heads_p)
+    goto end;
+  jmp_buf except;
+  h_arena_set_except(arena, &except);
+  if(setjmp(except))
+    goto end;
+
   uint8_t *insn_seen = a_new(uint8_t, prog->length); // 0 -> not seen, 1->processed, 2->queued
   HRVMThread *ip_queue = a_new(HRVMThread, prog->length);
   size_t ipq_top;
@@ -164,18 +173,19 @@ void* h_rvm_run__m(HAllocator *mm__, HRVMProg *prog, const uint8_t* input, size_
   }
   // No accept was reached.
  match_fail:
-  if (ret_trace == NULL) {
-    // No match found; definite failure.
-    h_delete_arena(arena);
-    return NULL;
+
+  h_arena_set_except(arena, NULL);  // there should be no more allocs from this
+  if (ret_trace) {
+    // Invert the direction of the trace linked list.
+    ret_trace = invert_trace(ret_trace);
+    ret = run_trace(mm__, prog, ret_trace, input, len);
+    // NB: ret is in its own arena
   }
   
-  // Invert the direction of the trace linked list.
-
-  ret_trace = invert_trace(ret_trace);
-  HParseResult *ret = run_trace(mm__, prog, ret_trace, input, len);
-  // ret is in its own arena
-  h_delete_arena(arena);
+ end:
+  if (arena)   h_delete_arena(arena);
+  if (heads_n) h_sarray_free(heads_n);
+  if (heads_p) h_sarray_free(heads_p);
   return ret;
 }
 #undef PUSH_SVM
@@ -202,6 +212,14 @@ HParseResult *run_trace(HAllocator *mm__, HRVMProg *orig_prog, HRVMTrace *trace,
   ctx.stack_count = 0;
   ctx.stack_capacity = 16;
   ctx.stack = h_new(HParsedToken*, ctx.stack_capacity);
+
+  // out of memory handling
+  if(!arena || !ctx.stack)
+    goto fail;
+  jmp_buf except;
+  h_arena_set_except(arena, &except);
+  if(setjmp(except))
+    goto fail;
 
   HParsedToken *tmp_res;
   HRVMTrace *cur;
@@ -242,7 +260,7 @@ HParseResult *run_trace(HAllocator *mm__, HRVMProg *orig_prog, HRVMTrace *trace,
       break;
     case SVM_ACCEPT:
       assert(ctx.stack_count <= 1);
-	HParseResult *res = a_new(HParseResult, 1);
+      HParseResult *res = a_new(HParseResult, 1);
       if (ctx.stack_count == 1) {
 	res->ast = ctx.stack[0];
       } else {
@@ -250,11 +268,14 @@ HParseResult *run_trace(HAllocator *mm__, HRVMProg *orig_prog, HRVMTrace *trace,
       }
       res->bit_length = cur->input_pos * 8;
       res->arena = arena;
+      h_arena_set_except(arena, NULL);
+      h_free(ctx.stack);
       return res;
     }
   }
  fail:
-  h_delete_arena(arena);
+  if (arena) h_delete_arena(arena);
+  if (ctx.stack) h_free(ctx.stack);
   return NULL;
 }
 

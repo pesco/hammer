@@ -18,6 +18,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <sys/types.h>
+#include <setjmp.h>
 
 #include "hammer.h"
 #include "internal.h"
@@ -42,6 +43,8 @@ struct HArena_ {
   size_t block_size;
   size_t used;
   size_t wasted;
+
+  jmp_buf *except;
 };
 
 HArena *h_new_arena(HAllocator* mm__, size_t block_size) {
@@ -62,7 +65,24 @@ HArena *h_new_arena(HAllocator* mm__, size_t block_size) {
   ret->used = 0;
   ret->mm__ = mm__;
   ret->wasted = sizeof(struct arena_link) + sizeof(struct HArena_) + block_size;
+  ret->except = NULL;
   return ret;
+}
+
+void h_arena_set_except(HArena *arena, jmp_buf *except)
+{
+  arena->except = except;
+}
+
+static void *alloc_block(HArena *arena, size_t size)
+{
+  void *block = arena->mm__->alloc(arena->mm__, size);
+  if (!block) {
+    if (arena->except)
+      longjmp(*arena->except, 1);
+    h_platform_errx(1, "memory allocation failed (%uB requested)\n", (unsigned int)size);
+  }
+  return block;
 }
 
 void* h_arena_malloc(HArena *arena, size_t size) {
@@ -79,22 +99,16 @@ void* h_arena_malloc(HArena *arena, size_t size) {
     // This involves some annoying casting...
     arena->used += size;
     arena->wasted += sizeof(struct arena_link*);
-    void* link = arena->mm__->alloc(arena->mm__, size + sizeof(struct arena_link*));
-    if (!link) {
-      // TODO: error-reporting -- let user know that arena link couldn't be allocated
-      return NULL;
-    }
+    void* link = alloc_block(arena, size + sizeof(struct arena_link*));
+    assert(link != NULL);
     memset(link, 0, size + sizeof(struct arena_link*));
     *(struct arena_link**)link = arena->head->next;
     arena->head->next = (struct arena_link*)link;
     return (void*)(((uint8_t*)link) + sizeof(struct arena_link*));
   } else {
     // we just need to allocate an ordinary new block.
-    struct arena_link *link = (struct arena_link*)arena->mm__->alloc(arena->mm__, sizeof(struct arena_link) + arena->block_size);
-    if (!link) {
-      // TODO: error-reporting -- let user know that arena link couldn't be allocated
-      return NULL;
-    }
+    struct arena_link *link = alloc_block(arena, sizeof(struct arena_link) + arena->block_size);
+    assert(link != NULL);
     memset(link, 0, sizeof(struct arena_link) + arena->block_size);
     link->free = arena->block_size - size;
     link->used = size;

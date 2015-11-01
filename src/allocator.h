@@ -18,6 +18,7 @@
 #ifndef HAMMER_ALLOCATOR__H__
 #define HAMMER_ALLOCATOR__H__
 #include <sys/types.h>
+#include <setjmp.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,6 +52,7 @@ HArena *h_new_arena(HAllocator* allocator, size_t block_size); // pass 0 for def
 void* h_arena_malloc(HArena *arena, size_t count) ATTR_MALLOC(2);
 void h_arena_free(HArena *arena, void* ptr); // For future expansion, with alternate memory managers.
 void h_delete_arena(HArena *arena);
+void h_arena_set_except(HArena *arena, jmp_buf *except);
 
 typedef struct {
   size_t used;

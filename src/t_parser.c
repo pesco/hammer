@@ -241,6 +241,7 @@ static void test_nothing_p(gconstpointer backend) {
 static void test_sequence(gconstpointer backend) {
   const HParser *sequence_1 = h_sequence(h_ch('a'), h_ch('b'), NULL);
   const HParser *sequence_2 = h_sequence(h_ch('a'), h_whitespace(h_ch('b')), NULL);
+  const HParser *sequence_3 = h_sequence(NULL, NULL);   // second NULL is to silence GCC
 
   g_check_parse_match(sequence_1, (HParserBackend)GPOINTER_TO_INT(backend), "ab", 2, "(u0x61 u0x62)");
   g_check_parse_failed(sequence_1, (HParserBackend)GPOINTER_TO_INT(backend), "a", 1);
@@ -248,6 +249,7 @@ static void test_sequence(gconstpointer backend) {
   g_check_parse_match(sequence_2, (HParserBackend)GPOINTER_TO_INT(backend), "ab", 2, "(u0x61 u0x62)");
   g_check_parse_match(sequence_2, (HParserBackend)GPOINTER_TO_INT(backend), "a b", 3, "(u0x61 u0x62)");
   g_check_parse_match(sequence_2, (HParserBackend)GPOINTER_TO_INT(backend), "a  b", 4, "(u0x61 u0x62)");  
+  g_check_parse_match(sequence_3, (HParserBackend)GPOINTER_TO_INT(backend), "", 0, "()");
 }
 
 static void test_choice(gconstpointer backend) {
