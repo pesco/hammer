@@ -120,6 +120,8 @@ HParser* h_sequence__mv(HAllocator* mm__, HParser *p, va_list ap_) {
   va_list ap;
   size_t len = 0;
   const HParser *arg;
+
+  assert(p != NULL);
   va_copy(ap, ap_);
   do {
     len++;
