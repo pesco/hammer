@@ -198,6 +198,16 @@ HParseResult *h_glr_parse(HAllocator* mm__, const HParser* parser, HInputStream*
   HArena *arena  = h_new_arena(mm__, 0);    // will hold the results
   HArena *tarena = h_new_arena(mm__, 0);    // tmp, deleted after parse
 
+  // out-of-memory handling
+  jmp_buf except;
+  h_arena_set_except(arena, &except);
+  h_arena_set_except(tarena, &except);
+  if(setjmp(except)) {
+    h_delete_arena(arena);
+    h_delete_arena(tarena);
+    return NULL;
+  }
+
   // allocate engine lists (will hold one engine per state)
   // these are swapped each iteration
   HSlist *engines = h_slist_new(tarena);

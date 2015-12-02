@@ -12,10 +12,8 @@
 HBitWriter *h_bit_writer_new(HAllocator* mm__) {
   HBitWriter *writer = h_new(HBitWriter, 1);
   memset(writer, 0, sizeof(*writer));
-  writer->buf = mm__->alloc(mm__, writer->capacity = 8);
-  if (!writer) {
-    return NULL;
-  }
+  writer->buf = h_alloc(mm__, writer->capacity = 8);
+  assert(writer != NULL);
   memset(writer->buf, 0, writer->capacity);
   writer->mm__ = mm__;
   writer->flags = BYTE_BIG_ENDIAN | BIT_BIG_ENDIAN;

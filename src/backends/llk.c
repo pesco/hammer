@@ -389,6 +389,13 @@ static HCountedArray *llk_parse_chunk_(HLLkState *s, const HParser* parser,
   if(!seq)
     return NULL;  // parse already failed
 
+  // out-of-memory handling
+  jmp_buf except;
+  h_arena_set_except(arena, &except);
+  h_arena_set_except(tarena, &except);
+  if(setjmp(except))
+    goto no_parse;
+
   if(s->win.length > 0) {
     append_win(kmax, s, chunk);
     stream = &s->win;
@@ -530,8 +537,6 @@ static HCountedArray *llk_parse_chunk_(HLLkState *s, const HParser* parser,
   return seq;
 
  no_parse:
-  h_delete_arena(arena);
-  s->arena = NULL;
   return NULL;
 
  need_input:
@@ -550,6 +555,8 @@ static HParseResult *llk_parse_finish_(HAllocator *mm__, HLLkState *s)
   if(s->seq) {
     assert(s->seq->used == 1);
     res = make_result(s->arena, s->seq->elements[0]);
+  } else {
+    h_delete_arena(s->arena);
   }
 
   h_delete_arena(s->tarena);
@@ -581,6 +588,9 @@ bool h_llk_parse_chunk(HSuspendedParser *s, HInputStream *input)
   HLLkState *state = s->backend_state;
 
   state->seq = llk_parse_chunk_(state, s->parser, input);
+
+  h_arena_set_except(state->arena, NULL);
+  h_arena_set_except(state->tarena, NULL);
 
   return (state->seq == NULL || h_slist_empty(state->stack));
 }

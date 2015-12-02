@@ -186,13 +186,11 @@ static void unamb_sub(const HParsedToken* tok, struct result_buf *buf) {
 
 char* h_write_result_unamb(const HParsedToken* tok) {
   struct result_buf buf = {
-    .output = (&system_allocator)->alloc(&system_allocator, 16),
+    .output = h_alloc(&system_allocator, 16),
     .len = 0,
     .capacity = 16
   };
-  if (!buf.output) {
-    return NULL;
-  }
+  assert(buf.output != NULL);
   unamb_sub(tok, &buf);
   append_buf_c(&buf, 0);
   return buf.output;

@@ -52,20 +52,21 @@ HRVMTrace *invert_trace(HRVMTrace *trace) {
 
 void* h_rvm_run__m(HAllocator *mm__, HRVMProg *prog, const uint8_t* input, size_t len) {
   HArena *arena = h_new_arena(mm__, 0);
-  HSArray *heads_n = h_sarray_new(mm__, prog->length), // Both of these contain HRVMTrace*'s
-    *heads_p = h_sarray_new(mm__, prog->length);
+  HSArray *heads_a = h_sarray_new(mm__, prog->length), // Both of these contain HRVMTrace*'s
+          *heads_b = h_sarray_new(mm__, prog->length);
 
   HRVMTrace *ret_trace = NULL;
   HParseResult *ret = NULL;
   
   // out of memory handling
-  if(!arena || !heads_n || !heads_p)
+  if(!arena || !heads_a || !heads_b)
     goto end;
   jmp_buf except;
   h_arena_set_except(arena, &except);
   if(setjmp(except))
     goto end;
 
+  HSArray *heads_n = heads_a, *heads_p = heads_b;
   uint8_t *insn_seen = a_new(uint8_t, prog->length); // 0 -> not seen, 1->processed, 2->queued
   HRVMThread *ip_queue = a_new(HRVMThread, prog->length);
   size_t ipq_top;
@@ -184,8 +185,8 @@ void* h_rvm_run__m(HAllocator *mm__, HRVMProg *prog, const uint8_t* input, size_
   
  end:
   if (arena)   h_delete_arena(arena);
-  if (heads_n) h_sarray_free(heads_n);
-  if (heads_p) h_sarray_free(heads_p);
+  if (heads_a) h_sarray_free(heads_a);
+  if (heads_b) h_sarray_free(heads_b);
   return ret;
 }
 #undef PUSH_SVM

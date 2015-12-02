@@ -254,6 +254,15 @@ static bool pos_equal(const void* key1, const void* key2) {
 
 HParseResult *h_packrat_parse(HAllocator* mm__, const HParser* parser, HInputStream *input_stream) {
   HArena * arena = h_new_arena(mm__, 0);
+
+  // out-of-memory handling
+  jmp_buf except;
+  h_arena_set_except(arena, &except);
+  if(setjmp(except)) {
+    h_delete_arena(arena);
+    return NULL;
+  }
+
   HParseState *parse_state = a_new_(arena, HParseState, 1);
   parse_state->cache = h_hashtable_new(arena, cache_key_equal, // key_equal_func
 				       cache_key_hash); // hash_func

@@ -24,17 +24,6 @@
 extern "C" {
 #endif
 
-// TODO(thequux): Turn this into an "HAllocatorVtable", and add a wrapper that also takes an environment pointer.
-typedef struct HAllocator_ {
-  void* (*alloc)(struct HAllocator_* allocator, size_t size);
-  void* (*realloc)(struct HAllocator_* allocator, void* ptr, size_t size);
-  void (*free)(struct HAllocator_* allocator, void* ptr);
-} HAllocator;
-
-typedef struct HArena_ HArena ; // hidden implementation
-
-HArena *h_new_arena(HAllocator* allocator, size_t block_size); // pass 0 for default...
-
 #if defined __llvm__
 # if __has_attribute(malloc)
 #   define ATTR_MALLOC(n) __attribute__((malloc))
@@ -48,6 +37,19 @@ HArena *h_new_arena(HAllocator* allocator, size_t block_size); // pass 0 for def
 #else
 # define ATTR_MALLOC(n)
 #endif
+
+// TODO(thequux): Turn this into an "HAllocatorVtable", and add a wrapper that also takes an environment pointer.
+typedef struct HAllocator_ {
+  void* (*alloc)(struct HAllocator_* allocator, size_t size);
+  void* (*realloc)(struct HAllocator_* allocator, void* ptr, size_t size);
+  void (*free)(struct HAllocator_* allocator, void* ptr);
+} HAllocator;
+
+void* h_alloc(HAllocator* allocator, size_t size) ATTR_MALLOC(2);
+
+typedef struct HArena_ HArena ; // hidden implementation
+
+HArena *h_new_arena(HAllocator* allocator, size_t block_size); // pass 0 for default...
 
 void* h_arena_malloc(HArena *arena, size_t count) ATTR_MALLOC(2);
 void h_arena_free(HArena *arena, void* ptr); // For future expansion, with alternate memory managers.

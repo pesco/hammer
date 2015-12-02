@@ -46,10 +46,8 @@ static int compare_entries(const void* v1, const void* v2) {
 }
 
 HTokenType h_allocate_token_type(const char* name) {
-  Entry* new_entry = (&system_allocator)->alloc(&system_allocator, sizeof(*new_entry));
-  if (!new_entry) {
-    return TT_INVALID;
-  }
+  Entry* new_entry = h_alloc(&system_allocator, sizeof(*new_entry));
+  assert(new_entry != NULL);
   new_entry->name = name;
   new_entry->value = 0;
   Entry* probe = *(Entry**)tsearch(new_entry, &tt_registry, compare_entries);

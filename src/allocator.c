@@ -47,15 +47,20 @@ struct HArena_ {
   jmp_buf *except;
 };
 
+void* h_alloc(HAllocator* mm__, size_t size) {
+  void *p = mm__->alloc(mm__, size);
+  if(!p)
+    h_platform_errx(1, "memory allocation failed (%uB requested)\n", (unsigned int)size);
+  return p;
+}
+
 HArena *h_new_arena(HAllocator* mm__, size_t block_size) {
   if (block_size == 0)
     block_size = 4096;
   struct HArena_ *ret = h_new(struct HArena_, 1);
-  struct arena_link *link = (struct arena_link*)mm__->alloc(mm__, sizeof(struct arena_link) + block_size);
-  if (!link) {
-    // TODO: error-reporting -- let user know that arena link couldn't be allocated
-    return NULL;
-  }
+  struct arena_link *link = (struct arena_link*)h_alloc(mm__, sizeof(struct arena_link) + block_size);
+  assert(ret != NULL);
+  assert(link != NULL);
   memset(link, 0, sizeof(struct arena_link) + block_size);
   link->free = block_size;
   link->used = 0;

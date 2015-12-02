@@ -49,7 +49,7 @@
   rtype_t name##__m(HAllocator* mm__)
 // Functions with arguments are difficult to forward cleanly. Alas, we will need to forward them manually.
 
-#define h_new(type, count) ((type*)(mm__->alloc(mm__, sizeof(type)*(count))))
+#define h_new(type, count) ((type*)(h_alloc(mm__, sizeof(type)*(count))))
 #define h_free(addr) (mm__->free(mm__, (addr)))
 
 #ifndef __cplusplus
