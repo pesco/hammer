@@ -383,10 +383,9 @@ static HCountedArray *llk_parse_chunk_(HLLkState *s, const HParser* parser,
   HArena *arena = s->arena;
   HArena *tarena = s->tarena;
   HSlist *stack = s->stack;
-  HCountedArray *seq = s->seq;
   size_t kmax = table->kmax;
 
-  if(!seq)
+  if(!s->seq)
     return NULL;  // parse already failed
 
   // out-of-memory handling
@@ -395,6 +394,8 @@ static HCountedArray *llk_parse_chunk_(HLLkState *s, const HParser* parser,
   h_arena_set_except(tarena, &except);
   if(setjmp(except))
     goto no_parse;
+
+  HCountedArray *seq = s->seq;
 
   if(s->win.length > 0) {
     append_win(kmax, s, chunk);
@@ -534,10 +535,15 @@ static HCountedArray *llk_parse_chunk_(HLLkState *s, const HParser* parser,
   // since we started with a single nonterminal on the stack, seq should
   // contain exactly the parse result.
   assert(seq->used == 1);
+
+ end:
+  h_arena_set_except(arena, NULL);
+  h_arena_set_except(tarena, NULL);
   return seq;
 
  no_parse:
-  return NULL;
+  seq = NULL;
+  goto end;
 
  need_input:
   if(stream->last_chunk)
@@ -545,7 +551,7 @@ static HCountedArray *llk_parse_chunk_(HLLkState *s, const HParser* parser,
   if(tok)
     h_arena_free(arena, tok);   // no result, yet
   h_slist_push(stack, x);       // try this symbol again next time
-  return seq;
+  goto end;
 }
 
 static HParseResult *llk_parse_finish_(HAllocator *mm__, HLLkState *s)

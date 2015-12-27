@@ -4,6 +4,9 @@ REM Exports CLFLAGS
 REM Start with the most strict warning level
 set WARNINGS=-W4 -Wall -WX
 
+REM c4464 (relative include path contains '..')
+set WARNINGS=%WARNINGS% -wd4464
+
 REM c4457 (declaration shadowing function parameter)
 REM FIXME(windows) TODO(uucidl): remove occurence of c4457 and reactivate
 REM FIXME(windows) TODO(uucidl): remove occurence of c4456 and reactivate
