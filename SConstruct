@@ -1,4 +1,7 @@
 # -*- python -*-
+
+from __future__ import absolute_import, division, print_function
+
 import os
 import os.path
 import platform
@@ -9,9 +12,10 @@ if platform.system() == 'Windows':
     default_install_dir = 'build' # no obvious place for installation on Windows
 
 vars = Variables(None, ARGUMENTS)
-vars.Add(PathVariable('DESTDIR', 'Root directory to install in (useful for packaging scripts)', None, PathVariable.PathIsDirCreate))
-vars.Add(PathVariable('prefix', 'Where to install in the FHS', default_install_dir, PathVariable.PathAccept))
+vars.Add(PathVariable('DESTDIR', "Root directory to install in (useful for packaging scripts)", None, PathVariable.PathIsDirCreate))
+vars.Add(PathVariable('prefix', "Where to install in the FHS", "/usr/local", PathVariable.PathAccept))
 vars.Add(ListVariable('bindings', 'Language bindings to build', 'none', ['cpp', 'dotnet', 'perl', 'php', 'python', 'ruby']))
+vars.Add('python', 'Python interpreter', 'python')
 
 tools = ['default', 'scanreplace']
 if 'dotnet' in ARGUMENTS.get('bindings', []):
@@ -43,9 +47,9 @@ env['prefix'] = os.path.abspath(env['prefix'])
 if 'DESTDIR' in env:
     env['DESTDIR'] = os.path.abspath(env['DESTDIR'])
     if rel_prefix:
-        print >>sys.stderr, '--!!-- You used a relative prefix with a DESTDIR. This is probably not what you'
-        print >>sys.stderr, '--!!-- you want; files will be installed in'
-        print >>sys.stderr, '--!!--    %s' % (calcInstallPath('$prefix'),)
+        print('--!!-- You used a relative prefix with a DESTDIR. This is probably not what you', file=sys.stderr)
+        print('--!!-- you want; files will be installed in', file=sys.stderr)
+        print('--!!--    %s' % (calcInstallPath('$prefix'),), file=sys.stderr)
 
 
 env['libpath'] = calcInstallPath('$prefix', 'lib')
@@ -102,7 +106,7 @@ if env['CC'] == 'cl':
         ]
     )
 else:
-    env.MergeFlags('-std=gnu99 -Wall -Wextra -Werror -Wno-unused-parameter -Wno-attributes -Wno-unused-variable')
+    env.MergeFlags('-std=c99 -D_POSIX_C_SOURCE=200809L -Wall -Wextra -Werror -Wno-unused-parameter -Wno-attributes -Wno-unused-variable')
 
 # Linker options
 if env['PLATFORM'] == 'darwin':

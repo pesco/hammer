@@ -1,6 +1,6 @@
 require 'bundler/setup'
 require 'minitest/autorun'
-require 'hammer'
+require 'hammer-parser'
 class TestToken < Minitest::Test
   def setup
     super

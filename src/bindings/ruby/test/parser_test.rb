@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 require 'bundler/setup'
-require 'hammer'
+require 'hammer-parser'
 require 'minitest/autorun'
 
 class ParserTest < Minitest::Test

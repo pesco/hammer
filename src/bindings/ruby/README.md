@@ -50,7 +50,7 @@ Add hammer to your Gemfile.
 
 Use hammer in your project.
 
-  `require 'hammer'`
+  `require 'hammer-parser'`
 
 ### Building a parser
 

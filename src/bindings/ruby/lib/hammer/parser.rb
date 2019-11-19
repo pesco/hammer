@@ -19,8 +19,10 @@ module Hammer
       @dont_gc = dont_gc.dup
     end
 
+    # dont_gc is required to build a fuzzer from the declaration of Hammer::Parser object.
     attr_reader :name
     attr_reader :h_parser
+    attr_reader :dont_gc
 
     # Parse the given data. Returns the parse result if successful, nil otherwise.
     #
